@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -157,6 +158,61 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
             // 4. 从Redis数据库删除该秒杀订单
             redisTemplate.boundHashOps("seckillOrderList").delete(userId);
 
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /** 查询超时5分钟未支付的订单 */
+    public List<SeckillOrder> findOrderByTimeout(){
+        try{
+            // 定义集合封装超时未支付的订单
+            List<SeckillOrder> seckillOrders = new ArrayList<>();
+
+            // 1. 从Redis获取所有未支付的订单
+            List<SeckillOrder> seckillOrderList = redisTemplate
+                    .boundHashOps("seckillOrderList").values();
+            // 2. 迭代全部未支付的订单
+            for (SeckillOrder seckillOrder : seckillOrderList) {
+                // 3. 判断哪些订单超时5分钟没有支付(订单的创建时间)
+                long date = new Date().getTime() - (5 * 60 * 1000);
+                // 判断是不是5分钟之前创建的订单
+                if (seckillOrder.getCreateTime().getTime() < date){
+                    seckillOrders.add(seckillOrder);
+                }
+            }
+
+            return seckillOrders;
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /** 删除Redis中的秒杀订单 */
+    public void deleteOrderFromRedis(SeckillOrder seckillOrder){
+        try{
+            // 1. 删除Redis中的秒杀订单
+            redisTemplate.boundHashOps("seckillOrderList")
+                    .delete(seckillOrder.getUserId());
+
+            // 2. 从Redis数据库中获取对应的秒杀商品，增加库存
+            SeckillGoods seckillGoods = (SeckillGoods) redisTemplate
+                    .boundHashOps("seckillGoodsList")
+                    .get(seckillOrder.getSeckillId());
+
+            if (seckillGoods != null){ // 没有被秒光
+                // 剩余库存加1
+                seckillGoods.setStockCount(seckillGoods.getStockCount() + 1);
+            }else{ // 秒光了
+                // 从数据库表查询秒杀商品
+                seckillGoods = seckillGoodsMapper
+                        .selectByPrimaryKey(seckillOrder.getSeckillId());
+                seckillGoods.setStockCount(1);
+            }
+
+            // 把修改后的秒杀商品存入Redis数据库
+            redisTemplate.boundHashOps("seckillGoodsList")
+                    .put(seckillGoods.getId(), seckillGoods);
         }catch (Exception ex){
             throw new RuntimeException(ex);
         }

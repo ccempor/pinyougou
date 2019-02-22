@@ -24,7 +24,7 @@ app.controller('baseController', function ($scope) {
     $scope.ids = [];
 
     // 为checkbox绑定点击事件
-    $scope.updateSelection = function ($event, id) {
+    $scope.updateSelection = function ($event,$index,id) {
         // 事件对象: $event
         // 获取dom元素: $event.target
         // 判断checkbox是否选中
@@ -42,7 +42,35 @@ app.controller('baseController', function ($scope) {
             $scope.ids.splice(idx, 1);
 
         }
+        $scope.checkedArr[$index] = $event.target.checked;
+
+        $scope.ckAll = $scope.dataList.length==$scope.ids.length ? true:false;
+
     };
+    $scope.checkedArr = [];
+    $scope.ckAll = false;
+
+    $scope.updateAllSelection=function ($event) {
+        $scope.checkedArr = [];
+        $scope.ids=[]
+        if($event.target.checked){
+            for(var i = 0; i <$scope.dataList.length ; i++) {
+                var data = $scope.dataList[i];
+                if($scope.ids.indexOf(data.id)>=0){
+                    continue;
+                }
+                $scope.ids.push(data.id);
+                $scope.checkedArr.push(true);
+            }
+            $scope.ckAll = true;
+        }else {
+            $scope.ids = [];
+            $scope.checkedArr = [];
+            // $scope.iChecked = false;
+        }
+    }
+
+
 
     /** 提取数组中json某个属性，返回拼接的字符串(逗号分隔) */
     $scope.jsonArr2Str = function (jsonArrStr, key) {

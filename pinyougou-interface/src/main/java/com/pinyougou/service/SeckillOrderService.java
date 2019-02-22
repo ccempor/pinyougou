@@ -39,4 +39,10 @@ public interface SeckillOrderService {
 
 	/** 支付成功,订单存储到mysql数据库 */
 	void saveOrder(String userId, String transactionId);
+
+	/** 查询超时5分钟未支付的订单 */
+	List<SeckillOrder> findOrderByTimeout();
+
+	/** 删除Redis中的秒杀订单 */
+	void deleteOrderFromRedis(SeckillOrder seckillOrder);
 }

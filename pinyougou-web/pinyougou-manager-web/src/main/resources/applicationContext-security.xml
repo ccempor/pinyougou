@@ -14,10 +14,15 @@
     <security:http pattern="/js/**" security="none"/>
     <security:http pattern="/plugins/**" security="none"/>
     <security:http pattern="/login.html" security="none"/>
+    <security:http pattern="/vcode" security="none"/>
 
     <!-- 配置剩余的请求URL都需要登录才能访问(角色) -->
-    <security:http>
-        <!-- SpEL:  hasRole('ADMIN') ROLE_* -->
+    <security:http entry-point-ref="authenticationEntryPoint" auto-config="false">
+        <!--
+            配置所有登录用户或未登录用户都能访问的请求地址
+            permitAll: 会进Security的登录Filter，如果是登录用户，可以获取到登录用户名
+         -->
+        <security:intercept-url pattern="/user/login" access="permitAll"/>
         <security:intercept-url pattern="/**" access="hasRole('ADMIN')"/>
         <!-- 配置表单登录
             login-page: 登录页面
@@ -33,15 +38,6 @@
 
             authentication-failure-url: 登录失败后，需要重定向的页面
         -->
-        <security:form-login login-page="/login.html"
-                             login-processing-url="/login"
-                             username-parameter="username"
-                             password-parameter="password"
-
-                             default-target-url="/admin/index.html"
-                             always-use-default-target="true"
-
-                             authentication-failure-url="/login.html"/>
         <!-- 关闭CSRF 跨站点请求伪造 -->
         <security:csrf disabled="true"/>
 
@@ -55,10 +51,15 @@
         <security:logout logout-url="/logout" invalidate-session="true"/>
     </security:http>
 
-
+    <!-- 配置认证入口 -->
+    <bean id="authenticationEntryPoint"
+          class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+        <!-- 配置认证处理请求地址 -->
+        <constructor-arg value="/user/login"/>
+    </bean>
 
     <!--########### 配置身份认证管理器 ###########-->
-    <security:authentication-manager>
+    <security:authentication-manager id="authenticationManager">
         <!-- 配置认证提供者 -->
         <security:authentication-provider>
             <!-- 配置用户服务作为认证提供者 -->

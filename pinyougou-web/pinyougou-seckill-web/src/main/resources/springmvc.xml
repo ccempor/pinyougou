@@ -4,6 +4,7 @@
        xmlns:mvc="http://www.springframework.org/schema/mvc"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+       xmlns:task="http://www.springframework.org/schema/task"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/mvc
@@ -11,7 +12,16 @@
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd
        http://code.alibabatech.com/schema/dubbo
-       http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+       http://code.alibabatech.com/schema/dubbo/dubbo.xsd
+       http://www.springframework.org/schema/task
+       http://www.springframework.org/schema/task/spring-task.xsd">
+
+    <!--######## 整合SpringTask任务调度 ########-->
+    <!-- 开启任务调度注解驱动 -->
+    <task:annotation-driven/>
+    <!-- 配置任务调度方式 scheduler:采用时间表达式方式 cron  -->
+    <task:scheduler id="scheduler"/>
+
 
     <!-- 开启MVC注解驱动 -->
     <mvc:annotation-driven>
@@ -41,5 +51,5 @@
         interface: 服务名称
     -->
     <!-- 配置包扫描方式引用的服务 -->
-    <dubbo:annotation package="com.pinyougou.seckill.controller"/>
+    <dubbo:annotation package="com.pinyougou.seckill"/>
 </beans>

@@ -1,9 +1,8 @@
 package com.pinyougou.pojo;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
-
-import javax.persistence.*;
 
 @Table(name="tb_order_item")
 public class OrderItem implements Serializable{
@@ -30,6 +29,16 @@ public class OrderItem implements Serializable{
     private String picPath;
 	@Column(name="seller_id")
     private String sellerId;
+    @Transient
+    private String spec;
+
+    public String getSpec() {
+        return spec;
+    }
+
+    public void setSpec(String spec) {
+        this.spec = spec;
+    }
 
     public Long getId() {
         return id;

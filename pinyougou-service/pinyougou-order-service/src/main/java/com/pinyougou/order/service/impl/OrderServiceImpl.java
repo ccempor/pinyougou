@@ -2,6 +2,7 @@ package com.pinyougou.order.service.impl;
 
 import com.alibaba.dubbo.config.annotation.Service;
 import com.pinyougou.cart.Cart;
+import com.pinyougou.common.pojo.PageResult;
 import com.pinyougou.common.util.IdWorker;
 import com.pinyougou.mapper.OrderItemMapper;
 import com.pinyougou.mapper.OrderMapper;
@@ -44,9 +45,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void save(Order order) {
         try{
-            // 1. 获取用户的购物车数据
+            // 1. 获取用户的购物车数据(选中的)
             List<Cart> carts = (List<Cart>)redisTemplate
-                    .boundValueOps("cart_" + order.getUserId()).get();
+                    .boundValueOps("selectedCart_" + order.getUserId()).get();
 
             // 定义本次支付的总金额
             double totalMoney = 0;
@@ -179,6 +180,43 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public PageResult findByPage(Integer page, Integer rows,String userId) {
+        try{
+            Long totalCount = orderMapper.findTotalCount();
+            List<Order> orders = orderMapper.findByPage(userId, (page - 1) * rows, rows);
+            return new PageResult(totalCount,orders);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public void savePayLog(Long orderId) {
+        Order order = orderMapper.selectByPrimaryKey(orderId);
+        PayLog payLog = new PayLog();
+        // 交易订单号
+        payLog.setOutTradeNo(String.valueOf(idWorker.nextId()));
+        // 创建时间
+        payLog.setCreateTime(new Date());
+        // 支付金额(分)
+        payLog.setTotalFee((long)(order.getPayment().doubleValue() * 100));
+        // 用户id
+        payLog.setUserId(order.getUserId());
+        // 交易状态 0:未支付 2:已支付
+        payLog.setTradeState("0");
+        // 订单列表
+        payLog.setOrderList(orderId+"");
+        // 支付类型
+        payLog.setPayType(order.getPaymentType());
+        // 往支付日志表中插入数据
+        payLogMapper.insertSelective(payLog);
+
+        // 把用户最新需要支付的存储到Redis数据库
+        redisTemplate.boundValueOps("payLog_" + order.getUserId()).set(payLog);
+    }
+
+    @Override
     public void update(Order order) {
 
     }
@@ -207,4 +245,5 @@ public class OrderServiceImpl implements OrderService {
     public List<Order> findByPage(Order order, int page, int rows) {
         return null;
     }
+
 }

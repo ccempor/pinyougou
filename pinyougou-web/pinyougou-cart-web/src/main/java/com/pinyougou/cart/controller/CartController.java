@@ -7,10 +7,7 @@ import com.pinyougou.common.util.CookieUtils;
 import com.pinyougou.service.CartService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -114,5 +111,47 @@ public class CartController {
             carts = JSON.parseArray(cartJsonStr, Cart.class);
         }
         return carts;
+    }
+
+    @PostMapping("addToSelecteCart")
+    public boolean addToSelecteCart(@RequestBody List<Cart> carts){
+        try{
+            cartService.addToSelecteCart(carts,request.getRemoteUser());
+            return true;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @GetMapping("findSelectedCart")
+    public List<Cart> findSelectedCart(){
+        String userId = request.getRemoteUser();
+        return cartService.findSelectedCartRedis(userId);
+    }
+
+    @PostMapping("deleteFromCart")
+    public boolean deleteFromCart(@RequestBody List<Cart> carts){
+        try{
+            List<Cart> totalCarts = findCart();
+            List<Cart> resultCarts = cartService.deleteFromCart(carts,totalCarts);
+            String userId = request.getRemoteUser();
+            if (StringUtils.isNoneBlank(userId)){
+                // 登录用户将商品放入redis中
+                cartService.saveCartRedis(userId,resultCarts);
+
+            }else {
+                // 未登录用户将商品放入cookie
+                /** ############ 未登录的用户，购物车数据存储到Cookie中 ############ */
+                CookieUtils.setCookie(request, response,
+                        CookieUtils.CookieName.PINYOUGOU_CART,
+                        JSON.toJSONString(resultCarts),
+                        60 * 60 * 24, true);
+            }
+            return true;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
     }
 }

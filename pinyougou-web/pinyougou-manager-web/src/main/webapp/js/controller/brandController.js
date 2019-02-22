@@ -15,9 +15,15 @@ app.controller("brandController", function($scope, $controller, baseService){
             $scope.dataList = response.data.rows;
             // 更新分页指令中的总记录数
             $scope.paginationConf.totalItems = response.data.total;
+
+            $scope.checkedArr = [];
+            $scope.ckAll = false;
+            $scope.ids=[]
         });
 
     };
+
+
 
 
     // 定义添加或修改品牌的方法

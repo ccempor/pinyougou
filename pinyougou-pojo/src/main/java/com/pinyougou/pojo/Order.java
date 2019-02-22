@@ -1,10 +1,10 @@
 package com.pinyougou.pojo;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
-
-import javax.persistence.*;
+import java.util.List;
 
 @Table(name="tb_order")
 public class Order implements Serializable{
@@ -61,7 +61,27 @@ public class Order implements Serializable{
     private String sourceType;
 	@Column(name="seller_id")
     private String sellerId;
-	
+    @Transient
+    private List<OrderItem> orderItems;
+    @Transient
+    private String sellerNickName;
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
+    }
+
+    public String getSellerNickName() {
+        return sellerNickName;
+    }
+
+    public void setSellerNickName(String sellerNickName) {
+        this.sellerNickName = sellerNickName;
+    }
+
     public Long getOrderId() {
         return orderId;
     }

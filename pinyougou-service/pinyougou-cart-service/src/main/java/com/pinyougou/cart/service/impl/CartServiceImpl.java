@@ -183,4 +183,61 @@ public class CartServiceImpl implements CartService {
         }
         return redisCarts;
     }
+
+    // 将选中的商品加入选中购物车
+    @Override
+    public void addToSelecteCart(List<Cart> carts, String userId) {
+        List<Cart> totalCart = (List<Cart>) redisTemplate.boundValueOps("cart_" + userId).get();
+        List<Cart> selectedCarts = new ArrayList<>();
+        for (Cart cart : carts) {
+            // 选中的商品加入新购物车, 并将商品从总购物车删除
+            Cart cart1 = searchCartBySellerId(totalCart, cart.getSellerId());
+
+            Cart selectedCart = new Cart();
+            selectedCart.setSellerId(cart1.getSellerId());
+            selectedCart.setSellerName(cart1.getSellerName());
+
+            List<OrderItem> orderItems = cart1.getOrderItems();
+            List<OrderItem> selectedOrderItems = new ArrayList<>();
+            // 判断商品是否选中
+            for (OrderItem orderItem : cart.getOrderItems()) {
+                OrderItem orderItem1 = searchOrderItemByItemId(orderItems, orderItem.getItemId());
+                orderItems.remove(orderItem1);
+                selectedOrderItems.add(orderItem1);
+                // 一个商家的商品全被选中, 将商家从总购物车删除
+                if (orderItems.size()==0){
+                    totalCart.remove(cart1);
+                }
+            }
+            selectedCart.setOrderItems(selectedOrderItems);
+            selectedCarts.add(selectedCart);
+        }
+        redisTemplate.boundValueOps("cart_"+userId).set(totalCart);
+        redisTemplate.boundValueOps("selectedCart_"+userId).set(selectedCarts);
+    }
+
+    @Override
+    public List<Cart> findSelectedCartRedis(String userId) {
+        return (List<Cart>) redisTemplate.boundValueOps("selectedCart_"+userId).get();
+    }
+
+    @Override
+    public List<Cart> deleteFromCart(List<Cart> selectedCarts, List<Cart> totalCarts) {
+        for (Cart cart : selectedCarts) {
+            // 选中的商品从总购物车删除
+            Cart cart1 = searchCartBySellerId(totalCarts, cart.getSellerId());
+            List<OrderItem> orderItems = cart1.getOrderItems();
+            // 判断商品是否选中
+            for (OrderItem orderItem : cart.getOrderItems()) {
+                OrderItem orderItem1 = searchOrderItemByItemId(orderItems, orderItem.getItemId());
+                orderItems.remove(orderItem1);
+                // 一个商家的商品全被选中, 将商家从总购物车删除
+                if (orderItems.size()==0){
+                    totalCarts.remove(cart1);
+                }
+            }
+        }
+        return totalCarts;
+    }
+
 }

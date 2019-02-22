@@ -22,4 +22,10 @@ public interface WeixinPayService {
      * 获取交易状态 (trade_state)
      */
     Map<String,String> queryPayStatus(String outTradeNo);
+
+    /**
+     * 调用微信支付系统"关闭订单"接口
+     * 获取关单状态 (return_code)
+     */
+    Map<String,String> closePayTimeout(String outTradeNo);
 }

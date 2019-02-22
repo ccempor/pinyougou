@@ -74,9 +74,9 @@
 			<!--数据列表-->
 			<table id="dataList" class="table table-bordered table-striped table-hover dataTable">
 				<thead>
-					<tr>
+					<tr>{{ids}}{{checkedArr}}
 						<th class="" style="padding-right:0px">
-							<input id="selall" type="checkbox" class="icheckbox_square-blue">
+							<input id="selall" type="checkbox" ng-checked="ckAll" ng-click="updateAllSelection($event)" class="icheckbox_square-blue">
 						</th> 
 						<th class="sorting_asc">品牌ID</th>
 						<th class="sorting">品牌名称</th>									      
@@ -88,7 +88,7 @@
 					<tr ng-repeat="entity in dataList">
 						<!-- $event: angularjs中的事件对象 -->
 						<td><input type="checkbox"
-								   ng-click="updateSelection($event, entity.id);"></td>
+								   ng-click="updateSelection($event,$index,entity.id);" ng-checked="checkedArr[$index]" ng-model="iChecked"></td>
 						<td>{{entity.id}}</td>
 						<td>{{entity.name}}</td>
 						<td>{{entity.firstChar}}</td>
